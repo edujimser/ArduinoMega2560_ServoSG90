@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "main.h"
+#include <Servo.h>
 
+Servo s;
 void setup() {                                                 // Arduino setup function (runs once at startup)
 
                                                                // Otherwise, run in normal execution mode
@@ -28,6 +30,7 @@ void setup() {                                                 // Arduino setup 
     if (systemConfiguration.diagnoseEEPROM) DiagnosticsEEPROM::runTest();
     if (systemConfiguration.debugMode) debug_init(); 
     if (systemConfiguration.version) printVersion(FIRMWARE_VERSION, FIRMWARE_NAME, FIRMWARE_DATE, FIRMWARE_AUTHOR, FIRMWARE_VERSION_APP, FIRMWARE_NAME_APP, FIRMWARE_DATE_APP);
+
 };
 
 
@@ -86,6 +89,7 @@ void loop() {
     [[maybe_unused]] PinInfo analog13 =         Pins::ANALOG[13];                        /* A13   → pin 67*/        pinMode(analog13.number, INPUT);
     [[maybe_unused]] PinInfo analog14 =         Pins::ANALOG[14];                        /* A14   → pin 68*/        pinMode(analog14.number, INPUT);
     [[maybe_unused]] PinInfo analog15 =         Pins::ANALOG[15];                        /* A15   → pin 69*/        pinMode(analog15.number, INPUT);
+    
     // PWM: Pins with pulse-width modulation capability
     // Variable                                | Pin array                              | Descripción             | Set pinMode   
     // ----------------------------------------|----------------------------------------|----------------------------------------------------------------
@@ -141,5 +145,42 @@ void loop() {
     [[maybe_unused]] PinInfo gpio31   =         Pins::GPIO[31];                          /* GPIO52 → pin 52 */      pinMode(gpio31.number, OUTPUT);
     [[maybe_unused]] PinInfo gpio32   =         Pins::GPIO[32];                          /* GPIO53 → pin 53 */      pinMode(gpio32.number, OUTPUT);
 
+  
+   static ServoMotor servo1( pwm0 );                      // Crear instancia del servo en el pin PWM02 (pin 2)                                            // Esperar 1 segundo
 
-} 
+    Serial.println("Introduce un angulo para el servo (0 a 180): ");
+
+    // Esperar a que el usuario escriba algo
+    while (Serial.available() == 0) {}
+
+    // Leer la línea completa
+    String entrada = Serial.readStringUntil('\n');
+    entrada.trim();  // quitar espacios y saltos
+
+    // Convertir a número
+    int angulo = entrada.toInt();
+
+    // Limitar rango
+    if (angulo < 0) angulo = 0;
+    if (angulo > 180) angulo = 180;
+
+    Serial.print("Moviendo servo al angulo: ");
+    Serial.println(angulo);
+
+    // Mover el servo
+    servo1.movimientoAngulo(angulo);
+
+    // Mostrar registros
+    Serial.print("Registro OCR Data: ");
+    Serial.println(servo1.timmerServo.registroOCRData);
+
+    Serial.print("TCCR3B despues de mover: ");
+    Serial.println(TCCR3B, BIN);
+
+    Serial.print("TCCR3A despues de mover: ");
+    Serial.println(TCCR3A, BIN);
+
+    Serial.println("-----------------------------");
+
+    delay(500);
+};
